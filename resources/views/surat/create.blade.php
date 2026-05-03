@@ -14,11 +14,25 @@
                         @csrf
 
                         <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="kop_surat">
+                                Pilih Kop Surat
+                            </label>
+                            <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                    id="kop_surat" name="kop_surat" required>
+                                {{-- Ubah value pt_teknologi menjadi hmti --}}
+                                <option value="hmti" {{ old('kop_surat') == 'hmti' ? 'selected' : '' }}>Kop HMTI Universitas Ibnu Sina</option>
+                                <option value="gmni" {{ old('kop_surat') == 'gmni' ? 'selected' : '' }}>Kop GMNI Kota Batam</option>
+                            </select>
+                            @error('kop_surat') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="mb-4">
                             <label class="block text-gray-700 text-sm font-bold mb-2" for="nama_tujuan">
                                 Nama Tujuan / Penerima
                             </label>
                             <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                   id="nama_tujuan" type="text" name="nama_tujuan" placeholder="Contoh: Bapak Budi Santoso" required>
+                                   id="nama_tujuan" type="text" name="nama_tujuan" placeholder="Contoh: Bapak Budi Santoso" value="{{ old('nama_tujuan') }}" required>
+                            @error('nama_tujuan') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-6">
@@ -26,7 +40,8 @@
                                 Isi Surat Utama
                             </label>
                             <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                                      id="isi_surat" name="isi_surat" rows="6" placeholder="Ketikkan isi pesan surat Anda di sini..." required></textarea>
+                                      id="isi_surat" name="isi_surat" rows="6" placeholder="Ketikkan isi pesan surat Anda di sini..." required>{{ old('isi_surat') }}</textarea>
+                            @error('isi_surat') <span class="text-red-500 text-xs italic">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="flex items-center justify-between">

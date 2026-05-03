@@ -18,50 +18,43 @@ class GenerateLetterController extends Controller
     }
     public function generate(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input (TAMBAHKAN KOP SURAT DI SINI)
         $request->validate([
             'nama_tujuan' => 'required',
-            'isi_surat' => 'required'
+            'isi_surat' => 'required',
+            'kop_surat' => 'required|string' // <--- TAMBAHAN 1
         ]);
 
         try {
             $nomorSurat = 'GEN-' . now()->format('YmdHis');
             $fileName = 'surat-keluar-' . time() . '.pdf';
             $path = 'arsip_surat/' . $fileName;
-// 2. Generate QR Code (Menggunakan API Eksternal agar otomatis jadi PNG tanpa error Imagick)
-            $teksQr = "Dokumen Resmi PT. Teknologi Masa Depan.\nNomor: " . $nomorSurat . "\nTujuan: " . $request->nama_tujuan;
-            
-            // Kita tembak ke API, ambil gambarnya, lalu ubah ke Base64 agar bisa dibaca DOMPDF
+
+            // 2. Generate QR Code
+            $teksQr = "Dokumen Resmi.\nNomor: " . $nomorSurat . "\nTujuan: " . $request->nama_tujuan;
             $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($teksQr);
             $qrCodeImage = base64_encode(file_get_contents($qrUrl));
 
-            // 3. Masukkan data & QR ke Template
+            // 3. Masukkan data & QR ke Template (TAMBAHKAN KOP SURAT DI SINI)
             $data = [
                 'nomor_surat' => $nomorSurat,
                 'nama_tujuan' => $request->nama_tujuan,
                 'tanggal' => now()->format('d F Y'),
                 'isi_surat' => $request->isi_surat,
-                'qrcode' => $qrCodeImage 
-            ];
-
-            // 3. Masukkan data & QR ke Template
-            $data = [
-                'nomor_surat' => $nomorSurat,
-                'nama_tujuan' => $request->nama_tujuan,
-                'tanggal' => now()->format('d F Y'),
-                'isi_surat' => $request->isi_surat,
-                'qrcode' => $qrCodeImage 
+                'qrcode' => $qrCodeImage,
+                'kop_surat' => $request->kop_surat // <--- TAMBAHAN 2
             ];
 
             // 4. Proses PDF
             $pdf = Pdf::loadView('surat.template1', $data);
             Storage::disk('public')->put($path, $pdf->output());
 
-            // 5. Simpan ke Database
+            // 5. Simpan ke Database (TAMBAHKAN KOP SURAT DI SINI)
             Letter::create([
                 'nomor_surat' => $nomorSurat,
                 'judul' => 'Surat Otomatis: ' . $request->nama_tujuan,
                 'jenis' => 'Keluar',
+                'kop_surat' => $request->kop_surat, // <--- TAMBAHAN 3
                 'tanggal_surat' => now(),
                 'file_path' => $path,
                 'keterangan' => 'Digenerate otomatis oleh sistem.'

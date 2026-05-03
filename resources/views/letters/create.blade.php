@@ -34,9 +34,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jenis Surat</label>
                             <select name="jenis" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="Masuk">Surat Masuk</option>
-                                <option value="Keluar">Surat Keluar</option>
+                                <option value="Masuk" {{ old('jenis') == 'Masuk' ? 'selected' : '' }}>Surat Masuk</option>
+                                <option value="Keluar" {{ old('jenis') == 'Keluar' ? 'selected' : '' }}>Surat Keluar</option>
                             </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Pilih Kop Surat</label>
+                            <select name="kop_surat" id="kop_surat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="pt_teknologi" {{ old('kop_surat') == 'pt_teknologi' ? 'selected' : '' }}>Kop PT. Teknologi Masa Depan (Standar)</option>
+                                <option value="gmni" {{ old('kop_surat') == 'gmni' ? 'selected' : '' }}>Kop GMNI Kota Batam</option>
+                            </select>
+                            @error('kop_surat') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div>

@@ -7,24 +7,32 @@ use App\Mail\LetterNotification;
 use App\Exports\LettersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Letter;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class LetterController extends Controller
 {
-   public function sendEmail(Request $request, Letter $letter)
-{
-    $request->validate(['email_tujuan' => 'required|email']);
-    
-    Mail::to($request->email_tujuan)->send(new LetterNotification($letter));
+    /**
+     * Mengirim email notifikasi arsip
+     */
+    public function sendEmail(Request $request, Letter $letter)
+    {
+        $request->validate(['email_tujuan' => 'required|email']);
+        
+        Mail::to($request->email_tujuan)->send(new LetterNotification($letter));
 
-    return redirect()->back()->with('success', 'Email berhasil dikirim ke ' . $request->email_tujuan);
-}
+        return redirect()->back()->with('success', 'Email berhasil dikirim ke ' . $request->email_tujuan);
+    }
+
+    /**
+     * 1. Method untuk menampilkan daftar arsip dengan filter & pencarian
+     */
     public function index(Request $request)
     {
         // Memulai query kosong
-        $query = \App\Models\Letter::query();
+        $query = Letter::query();
 
         // 1. Filter Pencarian Teks (Nomor / Judul)
         if ($request->filled('search')) {
@@ -67,12 +75,16 @@ class LetterController extends Controller
     /**
      * 3. Method untuk menyimpan data (Arsip Manual)
      */
+    /**
+     * 3. Method untuk menyimpan data (Arsip Manual)
+     */
     public function store(Request $request)
     {
         $request->validate([
             'nomor_surat' => 'required|unique:letters',
             'judul' => 'required',
             'jenis' => 'required|in:Masuk,Keluar',
+            'kop_surat' => 'required|string', // Validasi sudah benar
             'file_surat' => 'required|mimes:pdf,doc,docx|max:2048',
         ]);
 
@@ -83,6 +95,7 @@ class LetterController extends Controller
                 'nomor_surat' => $request->nomor_surat,
                 'judul' => $request->judul,
                 'jenis' => $request->jenis,
+                'kop_surat' => $request->kop_surat, // <--- TAMBAHKAN BARIS INI AGAR TERSIMPAN
                 'tanggal_surat' => now(),
                 'file_path' => $filePath,
                 'keterangan' => 'Arsip manual'
@@ -95,7 +108,6 @@ class LetterController extends Controller
             return back()->with('error', 'Terjadi kesalahan sistem saat mengunggah file.');
         }
     }
-
     /**
      * 4. Method untuk menghapus data (Soft Delete / Pindah ke Tong Sampah)
      */
@@ -108,7 +120,6 @@ class LetterController extends Controller
 
         try {
             // Hapus data dari database (otomatis jadi Soft Delete / masuk tong sampah)
-            // KODE PENGHAPUSAN FILE PDF DIHAPUS DARI SINI
             $letter->delete();
 
             return redirect()->route('letters.index')->with('success', 'Arsip berhasil dipindah ke Tong Sampah.');
@@ -122,10 +133,10 @@ class LetterController extends Controller
     /**
      * 5. Method untuk mengunduh Excel
      */
-    public function exportExcel(Request $request) // Tambahkan parameter Request di sini
+    public function exportExcel(Request $request) 
     {
         // Kirim semua input filter ($request) ke dalam class LettersExport
-        return Excel::download(new \App\Exports\LettersExport($request), 'Laporan_Filtered.xlsx');
+        return Excel::download(new LettersExport($request), 'Laporan_Filtered.xlsx');
     }
 
     // ==========================================
@@ -186,5 +197,18 @@ class LetterController extends Controller
             Log::error('Error saat menghapus permanen arsip: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus data secara permanen.');
         }
+    }
+
+    /**
+     * 9. Method untuk melihat Log Aktivitas
+     */
+    public function logs() 
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Akses Ditolak');
+        }
+
+        $logs = ActivityLog::with('user')->latest()->paginate(20);
+        return view('letters.logs', compact('logs'));
     }
 }

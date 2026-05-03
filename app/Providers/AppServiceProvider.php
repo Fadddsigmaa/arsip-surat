@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Observers\LetterObserver;
+use App\Models\Letter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        //
-    }
+{
+    Letter::observe(LetterObserver::class);
+}
 }
